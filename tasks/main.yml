@@ -1,0 +1,25 @@
+- stat:
+    path: ~/.anyenv
+  register: anyenv_is_installed
+
+- stat: 
+    path: "~/.config/anyenv/anyenv-install"
+  register: anyenv_init
+
+- name: install anyenv
+  shell: git clone https://github.com/riywo/anyenv ~/.anyenv
+  when: anyenv_is_installed.stat.exists == false
+
+- name: update anyenv
+  shell: cd ~/.anyenv && git fetch && git rebase origin master
+  register: git_messages
+  changed_when: git_messages.stdout != "Current branch master is up to date."
+
+- name: "anyenv.sh"
+  copy:
+    src: "anyenv.sh"
+    dest: "/etc/profile.d/anyenv.sh"
+
+- name: "anyenv init"
+  command: "~/.anyenv/bin/anyenv install --force-init"
+  when: anyenv_init.stat.exists == false
